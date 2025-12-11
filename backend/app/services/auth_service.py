@@ -1,36 +1,119 @@
 # app/services/auth_service.py
 
+
+import mysql.connector
+from mysql.connector import IntegrityError
 from app.db import get_connection
 from app.security import hash_password, verify_password, encrypt_sensitive, generate_jwt
 
-def register_user(name: str, email: str, password: str, phone: str | None = None):
+
+
+def register_user(name, email, password_hash, phone=None, role="USER"):
     """
-    Create a new user.
-    phone is optional now – frontend only sends name, email, password.
+    Register a new user.
+    - name, email, password_hash are required
+    - phone is optional. If provided and encrypt_sensitive exists, we'll encrypt it and store
+      into the `phone_encrypted` column (matching your DB).
+    Returns last inserted user_id on success.
+    Raises ValueError("Email already registered") on duplicate.
     """
-    from app.db import get_connection
-    from app.security import hash_password
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        # Normalize email on backend side (ensure lowercase stored)
+        email_norm = email.strip().lower()
 
-    conn = get_connection()
-    cursor = conn.cursor()
+        # If you have encrypt_sensitive function, use it; otherwise just store plain phone
+        phone_to_store = None
+        if phone:
+            phone_clean = phone.strip()
+            try:
+                phone_to_store = encrypt_sensitive(phone_clean)  # uses your existing encrypt routine
+            except Exception:
+                # if encryption not available, fallback to storing plain phone
+                phone_to_store = phone_clean
 
-    password_hash = hash_password(password)
+        sql = """
+        INSERT INTO users (name, email, password_hash, phone_encrypted, role)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql, (name.strip(), email_norm, password_hash, phone_to_store, role))
+        conn.commit()
+        return cursor.lastrowid
 
-    # ⚠️ use the same INSERT you already had before – likely WITHOUT phone
-    # Example (common one we used earlier):
-    sql = """
-        INSERT INTO users (name, email, password_hash, role)
-        VALUES (%s, %s, %s, %s)
+    except IntegrityError as e:
+        # MySQL duplicate entry errno = 1062
+        try:
+            errnum = e.errno
+        except Exception:
+            errnum = None
+
+        if errnum == 1062:
+            # duplicate key — return friendly message
+            raise ValueError("Email already registered")
+        raise
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+def register_user(name, email, password_hash, phone=None, role="USER"):
     """
-    cursor.execute(sql, (name, email, password_hash, "USER"))
+    Register a new user.
+    - name, email, password_hash are required
+    - phone is optional. If provided and encrypt_sensitive exists, we'll encrypt it and store
+      into the `phone_encrypted` column (matching your DB).
+    Returns last inserted user_id on success.
+    Raises ValueError("Email already registered") on duplicate.
+    """
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        # Normalize email on backend side (ensure lowercase stored)
+        email_norm = email.strip().lower()
 
-    conn.commit()
-    user_id = cursor.lastrowid
+        # If you have encrypt_sensitive function, use it; otherwise just store plain phone
+        phone_to_store = None
+        if phone:
+            phone_clean = phone.strip()
+            try:
+                phone_to_store = encrypt_sensitive(phone_clean)  # uses your existing encrypt routine
+            except Exception:
+                # if encryption not available, fallback to storing plain phone
+                phone_to_store = phone_clean
 
-    cursor.close()
-    conn.close()
-    return user_id
+        sql = """
+        INSERT INTO users (name, email, password_hash, phone_encrypted, role)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql, (name.strip(), email_norm, password_hash, phone_to_store, role))
+        conn.commit()
+        return cursor.lastrowid
 
+    except IntegrityError as e:
+        # MySQL duplicate entry errno = 1062
+        try:
+            errnum = e.errno
+        except Exception:
+            errnum = None
+
+        if errnum == 1062:
+            # duplicate key — return friendly message
+            raise ValueError("Email already registered")
+        raise
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 def login_user(email: str, password: str):
     """
     Logs in a user:

@@ -13,7 +13,6 @@ from app.routes.weather_routes import router as weather_router
 from app.routes.price_routes import router as price_router
 
 
-
 app = FastAPI(
     title="AirNova Flight System API",
     version="1.0.0",
@@ -32,6 +31,8 @@ app.add_middleware(
     allow_methods=["*"],         # VERY IMPORTANT (includes OPTIONS)
     allow_headers=["*"],         # Allow Content-Type, Authorization, etc
 )
+# -------------------------------------
+
 # -------------------------------------
 
 

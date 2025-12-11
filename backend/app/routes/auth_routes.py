@@ -1,20 +1,26 @@
 # app/routes/auth_routes.py
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr, constr
 
-from app.services.auth_service import register_user, login_user
+from app.models import RegisterRequest  # your Pydantic model
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+# import the actual functions your service exposes
+from app.services.auth_service import register_user, login_user, generate_jwt
+
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-# ---------- Pydantic models ----------
 
+
+
+
+
+# --- request/response schemas (adjust as needed) ---
 class RegisterRequest(BaseModel):
     name: str
     email: EmailStr
-    # backend also enforces minimum length
     password: constr(min_length=8)
+    phone: str | None = None  # optional
 
 
 class RegisterResponse(BaseModel):
@@ -32,45 +38,38 @@ class LoginResponse(BaseModel):
     user: dict
 
 
-# ---------- Routes ----------
+# --- routes ---
 
-@router.post("/register", response_model=RegisterResponse)
+@router.post("/auth/register")
 def register(req: RegisterRequest):
-    """
-    Register a new user.
-
-    Frontend sends JSON:
-    {
-        "name": "Jeevitha D S",
-        "email": "jeevi@example.com",
-        "password": "StrongPass123"
-    }
-    """
     try:
-        user_id = register_user(req.name, req.email, req.password)
-        return RegisterResponse(
-            user_id=user_id,
-            message="User registered successfully",
-        )
+        # normalize email
+        email_norm = req.email.strip().lower()
+        password_hash = hash_password(req.password)  # use your existing hash function
+        user_id = register_user(req.name, email_norm, password_hash, phone=req.phone)
+        return {"user_id": user_id, "message": "User registered"}
     except ValueError as e:
-        # For example when email already exists
-        raise HTTPException(status_code=400, detail=str(e))
+        # Duplicate email -> 409
+        raise HTTPException(status_code=409, detail=str(e))
+    except Exception as exc:
+        # Log and return generic error so SQL internal errors are not leaked to frontend
+        print("Registration error:", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/login", response_model=LoginResponse)
 def login(req: LoginRequest):
     """
-    Login with email + password.
-
-    Frontend sends JSON:
-    {
-        "email": "jeevi@example.com",
-        "password": "StrongPass123"
-    }
+    Login using login_user from auth_service.
+    login_user should return user dict on success, or None/raise on failure.
     """
-    result = login_user(req.email, req.password)
-    if not result:
-        # auth_service returns None on wrong email/password
+    user = login_user(req.email, req.password)
+    if not user:
         raise HTTPException(status_code=401, detail="Incorrect email or password")
 
-    return LoginResponse(token=result["token"], user=result["user"])
+    # generate_jwt: pass whatever ID or payload your function expects.
+    # common pattern: generate_jwt(user_id)  — adapt if your generate_jwt expects different.
+    uid = user.get("user_id") or user.get("id") or user.get("userId")
+    token = generate_jwt(uid if uid is not None else user)
+
+    return LoginResponse(token=token, user=user)
