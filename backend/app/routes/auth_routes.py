@@ -1,13 +1,10 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 from typing import Any, Dict
-
-from app.models import RegisterRequest, RegisterResponse, LoginRequest
-# Import service functions that exist in your auth_service module.
-# From conversation you have functions: hash_password, register_user, login_user, generate_jwt
+from app.schemas.auth import RegisterRequest, RegisterResponse, LoginRequest
 from app.services import auth_service
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 def _normalize_email(email: str) -> str:
