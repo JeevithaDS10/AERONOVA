@@ -247,3 +247,102 @@ select {
   border: 1px solid #d1d5db;
   font-size: 14px;
 }
+
+/* ================= REGISTER PAGE ONLY ================= */
+
+
+
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(
+    circle at top,
+    #eaf2ff 0%,
+    #f7faff 40%,
+    #ffffff 100%
+  );
+}
+
+.register-card {
+  width: 420px;                 /* ⬅ wider */
+  background: #ffffff;
+  padding: 22px 26px;           /* ⬅ less height */
+  border-radius: 22px;
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.09);
+  text-align: center;
+}
+
+
+.register-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.register-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+
+.register-form {
+  text-align: left;
+}
+
+.register-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;          /* was 6px */
+  margin-bottom: 12px; /* was 14px */
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.register-btn {
+  width: 100%;
+  margin-top: 12px;  /* was 16px */
+  padding: 10px;
+  font-size: 14.5px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+
+.register-form input,
+.register-form select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+.register-form input:focus,
+.register-form select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+
+
+.register-btn:hover {
+  background: #1e4fd8;
+}
+
+.register-footer {
+  margin-top: 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.register-footer span {
+  color: #2563eb;
+  cursor: pointer;
+}

@@ -1,25 +1,25 @@
-import { Link, useNavigate } from "react-router-dom";
 import "./navbar.css";
 
 export default function Navbar() {
-  const navigate = useNavigate();
-
   return (
     <nav className="navbar">
       <div className="nav-left">
-        <span className="logo">✈ AirNova</span>
-        <Link to="/dashboard">Dashboard</Link>
-        <Link to="/search">Book Flight</Link>
-        <Link to="/bookings">My Bookings</Link>
-        <Link to="/weather">Weather</Link>
-        <Link to="/price">Price</Link>
+        ✈️ <span>AeroNova</span>
       </div>
 
+      <ul className="nav-center">
+        <li>Home</li>
+        <li>Flights</li>
+        <li>Price Prediction</li>
+        <li>Weather</li>
+        <li>My Trips</li>
+      </ul>
+
       <div className="nav-right">
-        <span className="username">JEEVITHA D S</span>
-        <button className="logout-btn" onClick={() => navigate("/login")}>
-          Logout
-        </button>
+        <div className="live-text">
+          ✨ New routes added • Fare alerts enabled • Travel smart ✨
+        </div>
+        <div className="profile">👤</div>
       </div>
     </nav>
   );

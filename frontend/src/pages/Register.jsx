@@ -1,13 +1,14 @@
 // src/pages/Register.jsx
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { registerUser } from "../services/api"; // ✅ ADD THIS
 import "./auth-page.css";
 
 export default function Register() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const role = location.state?.role; // CUSTOMER or CREW
+  const role = location.state?.role || "USER"; // CUSTOMER → USER
 
   const [form, setForm] = useState({
     name: "",
@@ -21,25 +22,43 @@ export default function Register() {
   };
 
   const handleRegister = async () => {
-    // later connect backend here
-    console.log("REGISTER DATA:", { ...form, role });
+    try {
+      const payload = {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role: role,
+      };
 
-    alert("Registration successful!");
-    navigate("/login"); // 🔁 redirect after success
+      // optional: crew role logic (future use)
+      if (role === "CREW" && form.crewRole) {
+        payload.role = form.crewRole;
+      }
+
+      await registerUser(payload);
+
+      alert("Registration successful! Please login.");
+      navigate("/login");
+
+    } catch (err) {
+      console.error("Registration error:", err);
+      alert(
+        err.message ||
+        "Registration failed. Please try again."
+      );
+    }
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
+    <div className="register-page">
+      <div className="register-card">
 
-        {/* TITLE */}
-        <h2 className="auth-title">Create your account</h2>
-        <p className="auth-subtitle">
+        <h2 className="register-title">Create your account</h2>
+        <p className="register-subtitle">
           Join AeroNova to book flights seamlessly
         </p>
 
-        {/* FORM */}
-        <div className="auth-form">
+        <div className="register-form">
           <label>
             Full Name
             <input
@@ -72,7 +91,6 @@ export default function Register() {
             />
           </label>
 
-          {/* 🔥 ONLY FOR CREW */}
           {role === "CREW" && (
             <label>
               Crew Role
@@ -90,18 +108,14 @@ export default function Register() {
             </label>
           )}
 
-          <button className="primary-btn" onClick={handleRegister}>
+          <button className="register-btn" onClick={handleRegister}>
             Register
           </button>
         </div>
 
-        {/* FOOTER */}
-        <div className="auth-footer">
+        <div className="register-footer">
           Already have an account?{" "}
-          <span
-            style={{ color: "#2563eb", cursor: "pointer" }}
-            onClick={() => navigate("/login")}
-          >
+          <span onClick={() => navigate("/login")}>
             Login
           </span>
         </div>
